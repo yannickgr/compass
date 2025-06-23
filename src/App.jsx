@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchCards, insertCard, removeCard } from './lib/cardService'
+import { fetchCards, fetchCardTypes, insertCard, removeCard } from './lib/cardService'
 import CardForm from './components/CardForm'
 import CardItem from './components/CardItem';
 import { supabase } from './lib/supabaseClient';
@@ -7,6 +7,7 @@ import AuthForm from './components/AuthForm';
 
 function App() {
   const [cards, setCards] = useState([]);
+  const [cardTypes, setCardTypes] = useState([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [type, setType] = useState('');
@@ -24,6 +25,15 @@ function App() {
       }
     };
 
+    const loadCardTypes = async () => {
+      try {
+        const data = await fetchCardTypes();
+        setCardTypes(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
     });
@@ -33,6 +43,7 @@ function App() {
     });
 
     loadCards();
+    loadCardTypes();
 
     return () => {
       listener.subscription.unsubscribe();
@@ -41,9 +52,11 @@ function App() {
 
   const addCard = async (e) => {
     e.preventDefault();
+    const imageFile = document.querySelector('#image-upload')?.files[0];
     const newCard = { title, content, type };
+
     try {
-      const data = await insertCard(newCard);
+      const data = await insertCard(newCard, imageFile);
       setCards(prev => [...prev, ...data]);
       setTitle('');
       setContent('');
@@ -104,7 +117,7 @@ function App() {
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Domain: yoooo</h2>
             <div className="space-y-4">
               {cards.map(card => (
-                <CardItem key={card.id} card={card} onDelete={deleteCard} />
+                <CardItem key={card.id} card={card} cardTypes={cardTypes} onDelete={deleteCard} />
               ))}
             </div>
           </main>
