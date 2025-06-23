@@ -4,7 +4,7 @@ export async function fetchCards() {
   const { data, error } = await supabase
     .from('cards')
     .select('*')
-    .order('id', { ascending: true });
+    .order('created_at', { ascending: false });
   if (error) throw error;
   return data;
 }
